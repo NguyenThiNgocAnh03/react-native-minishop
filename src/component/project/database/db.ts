@@ -462,23 +462,32 @@ export const checkoutOrder = async (
   }
 };
 
-export const updateOrderStatus = async (orderId: number, status: OrderStatus): Promise<boolean> => {
-  const oid = Number(orderId);
-  if (Platform.OS === 'web') {
-    const orders: Order[] = getWeb('orders', []);
-    setWeb('orders', orders.map((o: any) => (Number(o.id) === oid ? { ...o, status } : o)));
-    return true;
-  }
+// Hàm cập nhật trạng thái đơn hàng (Dùng chung cho cả Admin duyệt/từ chối và User hủy đơn)
+export const updateOrderStatus = async (
+  orderId: number,
+  status: OrderStatus
+): Promise<boolean> => {
   try {
+    if (Platform.OS === 'web') {
+      const orders: Order[] = getWeb('orders', []);
+      const updated = orders.map((o) =>
+        Number(o.id) === Number(orderId) ? { ...o, status } : o
+      );
+      setWeb('orders', updated);
+      return true;
+    }
+
     const db = await getNativeDb();
-    await db.runAsync('UPDATE orders SET status = ? WHERE id = ?', [status, oid]);
+    await db.runAsync('UPDATE orders SET status = ? WHERE id = ?', [
+      status,
+      Number(orderId),
+    ]);
     return true;
   } catch (e) {
-    console.error('Lỗi updateOrderStatus:', e);
+    console.error('updateOrderStatus error:', e);
     return false;
   }
 };
-
 export const fetchOrderHistory = async (userId: number): Promise<Order[]> => {
   const uid = Number(userId);
   if (isNaN(uid)) return [];

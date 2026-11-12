@@ -201,7 +201,11 @@ export default function UserHome(props: any) {
 
       {/* 3. Tab Lịch sử đơn hàng */}
       {subTab === "history" && (
-        <HistoryTab orders={orders} currentUser={currentUser} />
+        <HistoryTab
+          orders={orders}
+          currentUser={currentUser}
+          onRefreshOrders={loadData}
+        />
       )}
 
       {/* 4. Tab Thông tin cá nhân */}
