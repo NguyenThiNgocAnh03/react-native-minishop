@@ -95,6 +95,7 @@ export default function AppTabs() {
               <LoginScreen {...props} onLoginSuccess={(u: User) => setCurrentUser(u)} />
             )}
           </Tab.Screen>
+          
         </Tab.Navigator>
       </NavigationContainer>
     </NavigationIndependentTree>

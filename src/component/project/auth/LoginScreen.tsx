@@ -49,7 +49,7 @@ export default function LoginScreen(props: any) {
         Alert.alert('Thành công', `Chào mừng ${user.username}!`);
       }
     } else {
-      const err = 'Sai tên đăng nhập hoặc mật khẩu! (Admin: admin / 123)';
+      const err = 'Sai tên đăng nhập hoặc mật khẩu! ';
       if (Platform.OS === 'web') window.alert(err);
       else Alert.alert('Thất bại', err);
     }

@@ -30,21 +30,29 @@ export default function AdminOrderTab({ onViewDetail }: Props) {
     setRefreshing(false);
   };
 
-  const handleUpdateStatus = (orderId: number, status: OrderStatus) => {
+  const handleUpdateStatus = (order: Order, status: OrderStatus) => {
+    // Chặn tuyệt đối nếu đơn không còn ở trạng thái Chờ duyệt
+    if ((order.status || 'pending') !== 'pending') {
+      const warn = 'Đơn hàng này đã được xử lý, không thể thay đổi trạng thái!';
+      if (Platform.OS === 'web') window.alert(warn);
+      else Alert.alert('Thông báo', warn);
+      return;
+    }
+
     const actionText = status === 'approved' ? 'DUYỆT' : 'TỪ CHỐI';
 
     const execute = async () => {
-      await updateOrderStatus(orderId, status);
+      await updateOrderStatus(order.id, status);
       await loadOrders();
-      const msg = `Đã ${actionText.toLowerCase()} đơn hàng #${orderId}!`;
+      const msg = `Đã ${actionText.toLowerCase()} đơn hàng #${order.id}!`;
       if (Platform.OS === 'web') window.alert(msg);
       else Alert.alert('Thành công', msg);
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm(`Xác nhận ${actionText} đơn hàng #${orderId}?`)) execute();
+      if (window.confirm(`Xác nhận ${actionText} đơn hàng #${order.id}? (Sau khi chốt sẽ không thể thay đổi)`)) execute();
     } else {
-      Alert.alert('Xác nhận tình trạng', `Bạn muốn ${actionText} đơn hàng #${orderId}?`, [
+      Alert.alert('Xác nhận tình trạng', `Bạn muốn ${actionText} đơn hàng #${order.id}?\n(Sau khi xác nhận sẽ không thể thay đổi)`, [
         { text: 'Hủy', style: 'cancel' },
         { text: 'Xác nhận', onPress: execute },
       ]);
@@ -74,6 +82,7 @@ export default function AdminOrderTab({ onViewDetail }: Props) {
             renderItem={({ item, index }) => {
               const currentStatus: OrderStatus = item.status || 'pending';
               const cfg = statusConfig[currentStatus] || statusConfig.pending;
+              const isLocked = currentStatus !== 'pending';
 
               return (
                 <TouchableOpacity
@@ -101,29 +110,33 @@ export default function AdminOrderTab({ onViewDetail }: Props) {
                     </Text>
                   </View>
 
-                  {/* Nút Duyệt / Từ chối */}
+                  {/* Cột Hành động: Chỉ cho bấm khi Chờ duyệt, đã chốt thì khóa cứng */}
                   <View style={[styles.cell, styles.colAction]}>
-                    <TouchableOpacity
-                      style={[styles.btnApprove, currentStatus === 'approved' && styles.btnDisabled]}
-                      onPress={(e) => {
-                        e.stopPropagation(); // Không kích hoạt sự kiện bấm vào hàng
-                        handleUpdateStatus(item.id, 'approved');
-                      }}
-                      disabled={currentStatus === 'approved'}
-                    >
-                      <Text style={styles.btnApproveText}>Duyệt</Text>
-                    </TouchableOpacity>
+                    {!isLocked ? (
+                      <>
+                        <TouchableOpacity
+                          style={styles.btnApprove}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleUpdateStatus(item, 'approved');
+                          }}
+                        >
+                          <Text style={styles.btnApproveText}>Duyệt</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[styles.btnReject, currentStatus === 'rejected' && styles.btnDisabled]}
-                      onPress={(e) => {
-                        e.stopPropagation(); // Không kích hoạt sự kiện bấm vào hàng
-                        handleUpdateStatus(item.id, 'rejected');
-                      }}
-                      disabled={currentStatus === 'rejected'}
-                    >
-                      <Text style={styles.btnRejectText}>Từ chối</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.btnReject}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleUpdateStatus(item, 'rejected');
+                          }}
+                        >
+                          <Text style={styles.btnRejectText}>Từ chối</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <Text style={styles.lockedLabel}>🔒 Đã chốt</Text>
+                    )}
                   </View>
                 </TouchableOpacity>
               );
@@ -148,7 +161,7 @@ const styles = StyleSheet.create({
   colPhone: { width: 100, textAlign: 'center' },
   colTotal: { width: 110, textAlign: 'right' },
   colStatus: { width: 105, alignItems: 'center' },
-  colAction: { width: 145, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  colAction: { width: 145, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 },
 
   boldId: { fontWeight: 'bold', color: '#007ACC' },
   priceText: { fontWeight: 'bold', color: '#D32F2F' },
@@ -158,7 +171,7 @@ const styles = StyleSheet.create({
   btnApproveText: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
   btnReject: { backgroundColor: '#C62828', paddingVertical: 5, paddingHorizontal: 9, borderRadius: 4 },
   btnRejectText: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
-  btnDisabled: { opacity: 0.35 },
+  lockedLabel: { fontSize: 11, color: '#757575', fontWeight: '600', fontStyle: 'italic' },
 
   empty: { textAlign: 'center', padding: 24, color: '#888' },
 });

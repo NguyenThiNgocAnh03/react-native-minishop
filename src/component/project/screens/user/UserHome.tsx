@@ -52,8 +52,9 @@ export default function UserHome(props: any) {
     }
   };
 
-  useFocusEffect(
+ useFocusEffect(
     useCallback(() => {
+      setSubTab("shop"); // Luôn mở mặc định ở trang Cửa hàng mỗi khi vào Home của user
       loadData();
     }, [currentUser]),
   );
