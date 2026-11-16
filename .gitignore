@@ -47,6 +47,8 @@ src/component/Buổi 7/
 src/component/Buổi 8/
 src/component/Buoi10/
 src/component/Buoi11/
-src/component/Buoi12/
+src/component/Buoi12/*
+!src/component/Buoi12/ProductDetailScreen.tsx
+!src/component/Buoi12/ProductsByCategoryScreen.tsx
 src/component/Buoi13/
 src/component/assets/
